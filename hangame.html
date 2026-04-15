@@ -328,6 +328,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            text-decoration: none;
         }
         
         .back-to-learning-btn:hover {
@@ -363,10 +364,10 @@
     <div id="start-screen" class="w-full flex flex-col items-center pt-8 pb-20 px-4">
         <!-- 封面處新增回到學習卡按鍵 -->
         <div class="back-to-learning-container mb-6">
-            <button onclick="location.reload()" class="back-to-learning-btn zh-text">
+            <a href="han.html" target="_top" class="back-to-learning-btn zh-text">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 回到學習卡
-            </button>
+            </a>
         </div>
         
         <h1 class="main-title zh-text mb-8">韓語單字挑戰 ✨</h1>
@@ -432,10 +433,10 @@
     <div id="game-screen" class="hidden w-full flex flex-col items-center pt-8 pb-20 px-4">
         <header class="w-full max-w-[500px] mb-8 flex flex-col items-center">
             <div class="back-to-learning-container">
-                <button onclick="location.reload()" class="back-to-learning-btn zh-text">
+                <a href="https://gemini.google.com/share/3aece7d421e4" target="_top" class="back-to-learning-btn zh-text">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     回到學習卡
-                </button>
+                </a>
             </div>
             <h1 class="main-title zh-text mb-6">韓語單字挑戰 ✨</h1>
             <div class="progress-container">
