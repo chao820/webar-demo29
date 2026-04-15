@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡單韓語學習卡✨</title>
+    <!-- 引入圓體感字型 -->
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #859CE0;
+            --secondary: #C2C3F0;
+            --accent: #9FB3DF;
+            --white: #ffffff;
+        }
+
+        /* 全域響應式優化 */
+        body {
+            background-color: var(--secondary);
+            font-family: 'M PLUS Rounded 1c', 'Gaegu', 'Noto Sans TC', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 8px; 
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 背景圖片降低透明度設計 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 使用提供的圖片作為背景 */
+            background-image: url('https://drive.google.com/thumbnail?id=1ighN8hr0LaSkBt8-EO8HNa5gtINRhEJo&sz=w1920');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.3; /* 降低透明度 */
+            z-index: -2; /* 確保在最底層 */
+        }
+
+        /* 下雪動畫容器 */
+        #snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            background: white;
+            border-radius: 50%;
+            filter: blur(1px);
+            opacity: 0.8;
+            pointer-events: none;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(25vh) translateX(15px); }
+            50% { transform: translateY(50vh) translateX(-15px); }
+            75% { transform: translateY(75vh) translateX(15px); }
+            100% { transform: translateY(105vh) translateX(0); }
+        }
+
+        /* 隨鼠標移動的小光芒 (Cursor Spotlight) */
+        #cursor-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1; 
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        @media (min-width: 640px) {
+            body { padding: 20px; }
+        }
+
+        .main-title {
+            font-family: 'M PLUS Rounded 1c', 'Gaegu', sans-serif;
+            color: var(--white);
+            text-shadow: 2px 2px 0px var(--primary);
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            font-size: 1.4rem; 
+            line-height: 1.2;
+        }
+
+        @media (min-width: 768px) {
+            .main-title { font-size: 3.2rem; text-shadow: 3px 3px 0px var(--primary); }
+        }
+
+        .kr-text { font-family: 'Gaegu', cursive; font-weight: 700; }
+        .zh-text { font-family: 'M PLUS Rounded 1c', sans-serif; font-weight: 700; }
+
+        .forced-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 8px; 
+        }
+
+        @media (min-width: 768px) {
+            .forced-grid { gap: 40px; }
+        }
+
+        .card-wrapper {
+            position: relative;
+            width: 100%;
+            height: 280px; 
+        }
+
+        @media (min-width: 768px) {
+            .card-wrapper { height: 450px; }
+        }
+
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card-container.is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px; 
+            padding: 10px;
+            box-shadow: 0 4px 0px var(--primary);
+            border: 2px solid var(--primary);
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .card-front, .card-back { padding: 24px; border-radius: 40px; box-shadow: 0 12px 0px var(--primary); border-width: 4px; }
+        }
+
+        .card-back { transform: rotateY(180deg); background-color: #f8faff; }
+
+        .static-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 4px 0px var(--primary);
+            border: 2px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 280px;
+            position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .static-card { height: 450px; padding: 24px; border-radius: 40px; box-shadow: 0 12px 0px var(--primary); border-width: 4px; }
+        }
+
+        .rom-box {
+            background: rgba(133, 156, 224, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 8px;
+            margin-bottom: 0.25rem;
+            backdrop-filter: blur(4px);
+        }
+
+        @media (min-width: 768px) {
+            .rom-box { padding: 6px 20px; border-radius: 16px; margin-bottom: 1rem; border-width: 2px; }
+        }
+
+        .card-tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary);
+            color: white;
+            padding: 3px 12px;
+            border-radius: 50px;
+            font-weight: 800;
+            border: 2px solid white;
+            z-index: 50; 
+            font-size: 0.7rem; 
+            white-space: nowrap;
+        }
+
+        @media (min-width: 768px) {
+            .card-tag { top: -24px; padding: 8px 36px; border-width: 4px; font-size: 1.25rem; }
+        }
+
+        .btn-speak {
+            background-color: var(--white);
+            color: var(--primary);
+            padding: 8px 12px;
+            border-radius: 50px;
+            font-weight: 700;
+            border: 2px solid var(--primary);
+            box-shadow: 0 3px 0 var(--primary);
+            font-size: 0.75rem;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        .btn-speak:hover { transform: scale(1.1); }
+        .btn-speak.speaking-active {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            transform: scale(1.05);
+        }
+
+        @media (min-width: 768px) {
+            .btn-speak { padding: 12px 28px; border-width: 3.5px; box-shadow: 0 5px 0 var(--primary); font-size: 1rem; }
+        }
+
+        /* 強化進度條明顯度 */
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 8px;
+            height: 16px; /* 增加高度 */
+            border-radius: 20px;
+            overflow: hidden;
+            border: 3px solid var(--primary); /* 邊框加粗 */
+            background-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--primary)); /* 漸層效果更亮眼 */
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.4);
+        }
+
+        .nav-btn {
+            background-color: var(--white);
+            color: var(--primary);
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 16px; box-shadow: 0 3px 0 var(--primary);
+            border: 2px solid var(--primary);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        .nav-btn:hover { transform: scale(1.15); }
+
+        @media (min-width: 768px) {
+            .nav-btn { width: 60px; height: 60px; font-size: 26px; box-shadow: 0 6px 0 var(--primary); border-width: 4px; }
+            .progress-container { height: 24px; border-width: 4px; } /* 桌機版更明顯 */
+        }
+
+        .tab-btn {
+            background: white; 
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: 2px 2px 0 var(--primary); 
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 8px 20px;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @media (min-width: 768px) {
+            .tab-btn { font-size: 1.1rem; padding: 10px 24px; }
+        }
+        .tab-btn:hover {
+            transform: scale(1.1); /* 鼠標靠近放大 */
+        }
+        .tab-btn.tab-active {
+            background: var(--primary);
+            color: white;
+            box-shadow: inset 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .speed-btn {
+            border: 1.5px solid var(--primary);
+            border-radius: 9999px;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: var(--primary);
+            background: white;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+        }
+        @media (min-width: 768px) {
+            .speed-btn { font-size: 1rem; padding: 6px 16px; }
+        }
+        .speed-btn:hover {
+            transform: scale(1.15); /* 鼠標靠近放大 */
+        }
+        .speed-active { background-color: var(--primary); color: white; }
+
+        .btn-quiz {
+            background-color: #fbbf24; color: #92400e;
+            padding: 6px 15px; border-radius: 50px; font-weight: 800;
+            border: 2px solid #92400e; box-shadow: 0 3px 0 #92400e;
+            font-size: 0.9rem;
+            display: inline-block;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @media (min-width: 768px) {
+            .btn-quiz { font-size: 1.1rem; padding: 10px 24px; }
+        }
+        .btn-quiz:hover {
+            transform: scale(1.1); /* 鼠標靠近放大 */
+        }
+    </style>
+</head>
+<body>
+    <!-- 滑鼠跟隨光暈 -->
+    <div id="cursor-glow"></div>
+
+    <!-- 下雪容器 -->
+    <div id="snow-container"></div>
+
+    <div class="max-w-4xl mx-auto relative z-10 w-full">
+        <header class="text-center mb-4 sm:mb-8">
+            <!-- 標題文案更新 -->
+            <h1 class="main-title zh-text mb-3 sm:mb-6 px-1">簡單韓語學習卡✨</h1>
+            
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4 sm:mb-8 px-1">
+                <button onclick="changeCategory('greetings')" id="tab-greetings" class="tab-btn rounded-full zh-text tab-active">🔥 打招呼用語</button>
+                <button onclick="changeCategory('vocab')" id="tab-vocab" class="tab-btn rounded-full zh-text">🍎 日常單字</button>
+                <button onclick="changeCategory('slang')" id="tab-slang" class="tab-btn rounded-full zh-text">😎 流行語</button>
+            </div>
+
+            <div class="progress-container mx-2 sm:mx-auto">
+                <div id="progress-fill" class="progress-fill" style="width: 20%; transition: width 0.3s;"></div>
+            </div>
+            <div class="text-blue-900 zh-text mb-1 sm:mb-4 text-xs sm:text-xl font-black" id="progress-label" style="text-shadow: 0 0 8px white;">學習進度: 1 / 5</div>
+        </header>
+
+        <main class="space-y-4 sm:space-y-8 px-1">
+            <div class="forced-grid" id="card-grid"></div>
+
+            <div id="explanation-area" class="hidden bg-white/85 border-2 sm:border-4 border-dashed border-accent rounded-[15px] sm:rounded-[35px] p-3 sm:p-8 shadow-sm">
+                <div class="grid grid-cols-2 gap-3 sm:gap-8">
+                    <div>
+                        <h4 class="font-bold text-blue-600 mb-1 flex items-center gap-2 zh-text text-[10px] sm:text-lg">💡 使用時機</h4>
+                        <p id="ex-context" class="text-gray-700 leading-tight zh-text text-[9px] sm:text-lg"></p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-blue-600 mb-1 flex items-center gap-2 zh-text text-[10px] sm:text-lg">📚 字詞解析</h4>
+                        <p id="ex-origin" class="text-gray-700 leading-tight zh-text text-[9px] sm:text-lg"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white/95 rounded-[20px] sm:rounded-[50px] p-3 sm:p-8 border-2 sm:border-4 border-primary shadow-2xl mt-2 sm:mt-8">
+                <div class="flex flex-col items-center gap-3 sm:gap-8">
+                    <div class="flex justify-between items-center gap-2 sm:gap-8 w-full">
+                        <button id="btn-speak-left" onclick="handleSpeak('left')" class="btn-speak zh-text flex-1">🔊 左發音</button>
+                        
+                        <div class="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2 bg-blue-50 rounded-full border border-primary justify-center">
+                            <span class="zh-text text-sm sm:text-base text-blue-800 whitespace-nowrap">語速</span>
+                            <button onclick="setSpeed(0.5, this)" class="speed-btn">慢速</button>
+                            <button onclick="setSpeed(1.0, this)" class="speed-btn speed-active">正常</button>
+                            <button onclick="setSpeed(1.5, this)" class="speed-btn">快速</button>
+                        </div>
+
+                        <button id="btn-speak-right" onclick="handleSpeak('right')" class="btn-speak zh-text flex-1">🔊 右發音</button>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-4 sm:gap-12 border-t border-blue-50 pt-3 sm:pt-8 w-full relative">
+                        <div class="nav-btn" onclick="prevItem()">❮</div>
+                        <div class="text-lg sm:text-4xl font-black text-blue-800 zh-text" id="counter">1 / 5</div>
+                        <div class="nav-btn" onclick="nextItem()">❯</div>
+                        
+                        <div class="absolute right-0 top-1/2 -translate-y-1/2 pt-3 sm:pt-8 hidden md:block">
+                            <a href="https://drive.google.com/file/d/1QP2MN-oN3Lg5rHIli10tNMGwr37KMopL/view?usp=sharing" target="_blank" class="btn-quiz zh-text">🎮 測驗遊戲</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 滑鼠跟隨光暈邏輯
+        const glow = document.getElementById('cursor-glow');
+        document.addEventListener('mousemove', (e) => {
+            glow.style.left = e.clientX + 'px';
+            glow.style.top = e.clientY + 'px';
+            glow.style.opacity = '1';
+        });
+        document.addEventListener('mouseleave', () => {
+            glow.style.opacity = '0';
+        });
+
+        // 下雪特效邏輯
+        function createSnowflakes() {
+            const container = document.getElementById('snow-container');
+            const flakeCount = 50; // 雪花數量
+
+            for (let i = 0; i < flakeCount; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                
+                // 隨機屬性
+                const size = Math.random() * 5 + 2 + 'px';
+                const left = Math.random() * 100 + '%';
+                const duration = Math.random() * 10 + 10 + 's';
+                const delay = Math.random() * 10 + 's';
+                const opacity = Math.random() * 0.5 + 0.3;
+
+                flake.style.width = size;
+                flake.style.height = size;
+                flake.style.left = left;
+                flake.style.animationDuration = duration;
+                flake.style.animationDelay = delay;
+                flake.style.opacity = opacity;
+
+                container.appendChild(flake);
+            }
+        }
+
+        const data = {
+            greetings: [
+                {
+                    left: { kr: "안녕하세요", rom: "An-nyeong-ha-se-yo", zh: "您好", sentence: "안녕하세요,<br>처음 뵙겠습니다.", trans: "您好，初次見面。" },
+                    right: { kr: "안녕", rom: "An-nyeong", zh: "你好", sentence: "안녕!<br>오늘 날씨 진짜 좋다.", trans: "嗨！今天天氣真好。" }
+                },
+                {
+                    left: { kr: "감사합니다", rom: "Gam-sa-ham-ni-da", zh: "謝謝", sentence: "도와주셔서<br>정말 감사합니다.", trans: "真的很感謝您的幫助。" },
+                    right: { kr: "고마워", rom: "Go-ma-wo", zh: "謝啦", sentence: "오늘 선물<br>정말 고마워!", trans: "今天的禮物真的很謝謝！" }
+                },
+                {
+                    left: { kr: "죄송합니다", rom: "Joe-song-ham-ni-da", zh: "對不起", sentence: "늦어서<br>정말 죄송합니다.", trans: "我很抱歉我遲到了。" },
+                    right: { kr: "미안해", rom: "Mi-an-hae", zh: "抱歉", sentence: "내가 깜빡했어,<br>미안해.", trans: "我忘記了，抱歉。" }
+                },
+                {
+                    left: { kr: "잘 부탁드립니다", rom: "Jal bu-tak-deu-rim-ni-da", zh: "請多多指教", sentence: "앞으로<br>잘 부탁드립니다.", trans: "今後還請您多多指教。" },
+                    right: { kr: "잘 부탁해", rom: "Jal bu-tak-hae", zh: "多多指教", sentence: "우리 친하게 지내자,<br>잘 부탁해!", trans: "我們好好相處吧，多多指教！" }
+                },
+                {
+                    left: { kr: "반갑습니다", rom: "Ban-gap-seum-ni-da", zh: "很高興見到您", sentence: "만나서<br>정말 반갑습니다.", trans: "見到您真的很高興。" },
+                    right: { kr: "반가워", rom: "Ban-ga-wo", zh: "很高興認識你", sentence: "만나서<br>정말 반가워!", trans: "認識你真的很高興！" }
+                }
+            ],
+            vocab: [
+                { kr: "사과", rom: "Sa-gwa", zh: "蘋果", img: "🍎", sentence: "사과가<br>아주 빨개요.", trans: "蘋果非常紅。" },
+                { kr: "학교", rom: "Hak-gyo", zh: "學校", img: "🏫", sentence: "학교에<br>친구들이 많아요.", trans: "學校裡有很多朋友。" },
+                { kr: "친구", rom: "Chin-gu", zh: "朋友", img: "👫", sentence: "친구랑 같이<br>떡볶이를 먹어요.", trans: "和朋友一起吃辣炒年糕。" },
+                { kr: "강아지", rom: "Gang-a-ji", zh: "小狗", img: "🐶", sentence: "우리 강아지는<br>너무 귀英워요.", trans: "我們家的小狗太可愛了。" },
+                { kr: "밥", rom: "Bap", zh: "飯", img: "🍚", sentence: "같이 밥 먹으러<br>갈까요?", trans: "要不要一起去吃飯？" }
+            ],
+            slang: [
+                { kr: "갑분싸", rom: "Gap-bun-ssa", zh: "氣氛突然變冷", sentence: "부장님 농담 때문에<br>갑분싸 됐어.", trans: "因為部長的冷笑話，氣氛突然變得很冷。", context: "當有人說了冷笑話或做了尷尬的事情，導致原本熱絡的氣氛瞬間結冰時使用。", origin: "「갑자기 분위기가 싸해지다」的縮寫，意為「氣氛突然變得很冷淡」。" },
+                { kr: "킹받네", rom: "King-bat-ne", zh: "KING生氣", sentence: "아 진짜<br>킹받네!", trans: "啊，真的超生氣！", context: "除了有生氣열받다的意思之外，有時候它不像열받다來的那麼生氣，而是比較淘氣、開玩笑的說法。", origin: "킹받다是king+열받다的合成新造語☑️ 這個流行語是2018年時有一個WEBTOON作家兼stream直播主發明的～ 從那時開始電視節目或網路上就開始使用！" },
+                { kr: "꿀잼", rom: "Ggul-jaem", zh: "超有趣", sentence: "이 드라마<br>진짜 꿀잼이야!", trans: "這部韓劇真的超有趣！", context: "形容事情好玩與否。", origin: "蜂蜜(꿀) + 趣味(Jaemi)。" },
+                { kr: "멘붕", rom: "Men-bung", zh: "精神崩潰", sentence: "시험 점수 보고<br>완전 멘붕 왔어.", trans: "看到考試分數後，精神徹底崩潰了。", context: "用於形容遇到打擊、事情不順時靈魂出竅般的震驚狀態。", origin: "精神(Mental) + 崩潰(Bung-goe)。" },
+                { kr: "인싸", rom: "In-ssa", zh: "社牛 (Insidier)", sentence: "그 사람은 성격이 좋아서<br>완전인싸야.", trans: "那個人性格很好，真的是個社牛(大紅人)。", context: "形容在人群中極具影響力、社交能力極強的人。", origin: "英語「Insider」的韓式縮寫。" }
+            ]
+        };
+
+        let currentCategory = 'greetings';
+        let currentIndex = 0;
+        let speechRate = 1.0;
+
+        function changeCategory(cat) {
+            currentCategory = cat;
+            currentIndex = 0;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active'));
+            document.getElementById(`tab-${cat}`).classList.add('tab-active');
+            renderContent();
+        }
+
+        function toggleFlip(side) {
+            if (currentCategory === 'greetings') {
+                const card = document.getElementById(`container-${side}`);
+                card.classList.toggle('is-flipped');
+            }
+        }
+
+        function setSpeed(rate, btn) {
+            speechRate = rate;
+            document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('speed-active'));
+            btn.classList.add('speed-active');
+        }
+
+        function speak(text, btnElement) {
+            const cleanText = text.replace(/<br\s*\/?>/gi, ' ');
+            
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'ko-KR';
+                utterance.rate = speechRate;
+
+                utterance.onstart = () => {
+                    if (btnElement) btnElement.classList.add('speaking-active');
+                };
+
+                utterance.onend = () => {
+                    if (btnElement) btnElement.classList.remove('speaking-active');
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function handleSpeak(side) {
+            const item = data[currentCategory][currentIndex];
+            const btn = document.getElementById(`btn-speak-${side}`);
+            
+            if (currentCategory === 'greetings') {
+                const sideData = side === 'left' ? item.left : item.right;
+                const card = document.getElementById(`container-${side}`);
+                if (card && card.classList.contains('is-flipped')) { 
+                    speak(sideData.sentence, btn); 
+                } else { 
+                    speak(sideData.kr, btn); 
+                }
+            } else {
+                if (side === 'left') { 
+                    speak(item.kr, btn); 
+                } else { 
+                    speak(item.sentence, btn); 
+                }
+            }
+        }
+
+        function celebrate() {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        }
+
+        function renderContent() {
+            const list = data[currentCategory];
+            const item = list[currentIndex];
+            const grid = document.getElementById('card-grid');
+            const progress = ((currentIndex + 1) / list.length) * 100;
+            
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('progress-label').innerText = `學習進度: ${currentIndex + 1} / ${list.length}`;
+            document.getElementById('counter').innerText = `${currentIndex + 1} / ${list.length}`;
+            
+            const exArea = document.getElementById('explanation-area');
+            if (currentCategory === 'slang') {
+                exArea.classList.remove('hidden');
+                document.getElementById('ex-context').innerText = item.context;
+                document.getElementById('ex-origin').innerText = item.origin;
+            } else { exArea.classList.add('hidden'); }
+            
+            grid.innerHTML = '';
+            if (currentCategory === 'greetings') {
+                ['left', 'right'].forEach((side, idx) => {
+                    const sideData = item[side];
+                    const tagText = idx === 0 ? "敬語" : "平語";
+                    grid.innerHTML += `
+                        <div class="card-wrapper">
+                            <div class="card-tag zh-text">${tagText}</div>
+                            <div class="card-container" id="container-${side}" onclick="toggleFlip('${side}')">
+                                <div class="card-inner">
+                                    <div class="card-front">
+                                        <div class="kr-text text-3xl sm:text-7xl text-blue-600 mb-1 sm:mb-5">${sideData.kr}</div>
+                                        <div class="rom-box">
+                                            <div class="text-blue-500 italic text-[10px] sm:text-2xl font-bold font-sans">${sideData.rom}</div>
+                                        </div>
+                                        <div class="zh-text text-sm sm:text-4xl text-gray-700">${sideData.zh}</div>
+                                        <div class="mt-2 sm:mt-8 text-blue-300 zh-text text-[8px] sm:text-sm font-bold">💡 點擊看造句</div>
+                                    </div>
+                                    <div class="card-back">
+                                        <div class="kr-text text-[18px] sm:text-4xl text-blue-800 mb-1 sm:mb-6 text-center px-1 leading-normal">
+                                            ${sideData.sentence}
+                                        </div>
+                                        <div class="zh-text text-[11px] sm:text-2xl text-gray-500 text-center px-1">${sideData.trans}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                const tagLeft = currentCategory === 'vocab' ? "單字" : "流行語";
+                const krFontSize = currentCategory === 'slang' ? 'text-4xl sm:text-7xl' : 'text-6xl sm:text-8xl';
+                grid.innerHTML = `
+                    <div class="static-card">
+                        <div class="card-tag zh-text">${tagLeft}</div>
+                        ${item.img ? `<div class="text-2xl sm:text-6xl mb-1 sm:mb-4 scale-90">${item.img}</div>` : ''}
+                        <div class="kr-text ${krFontSize} text-blue-600 mb-1 sm:mb-4">${item.kr}</div>
+                        <div class="rom-box">
+                            <div class="text-blue-500 italic text-[10px] sm:text-2xl font-bold font-sans">${item.rom}</div>
+                        </div>
+                        <div class="zh-text text-sm sm:text-4xl text-gray-700 font-bold">${item.zh}</div>
+                    </div>
+                    <div class="static-card bg-white">
+                        <div class="card-tag zh-text">造句練習</div>
+                        <div class="text-center px-2 sm:px-8">
+                            <div class="kr-text text-[18px] sm:text-5xl text-blue-800 mb-2 sm:mb-10 leading-relaxed">
+                                ${item.sentence}
+                            </div>
+                            <div class="zh-text text-[11px] sm:text-2xl text-gray-500">${item.trans}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function nextItem() { 
+            const lastIndex = data[currentCategory].length - 1;
+            window.speechSynthesis.cancel();
+            if (currentIndex === lastIndex) {
+                currentIndex = 0;
+                renderContent(); celebrate(); 
+            } else { currentIndex++; renderContent(); }
+        }
+
+        function prevItem() { 
+            window.speechSynthesis.cancel();
+            currentIndex = (currentIndex - 1 + data[currentCategory].length) % data[currentCategory].length; 
+            renderContent(); 
+        }
+
+        window.onload = () => {
+            renderContent();
+            createSnowflakes(); // 啟動下雪動畫
+        };
+    </script>
+</body>
+</html>
